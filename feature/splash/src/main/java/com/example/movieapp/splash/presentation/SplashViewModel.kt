@@ -1,26 +1,19 @@
 package com.example.movieapp.splash.presentation
 
+import androidx.lifecycle.viewModelScope
+import com.example.movieapp.navigation.app_navigator.AppNavigator
+import com.example.movieapp.navigation.home.HomeRoute
+import com.example.movieapp.ui.base.BaseViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import androidx.lifecycle.viewModelScope
-import com.example.movieapp.ui.base.BaseViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
-class SplashViewModel :
-    BaseViewModel<SplashState, SplashEvent, SplashSideEffect>(SplashState()) {
+class SplashViewModel : BaseViewModel<Unit, Unit, Unit>(Unit) {
 
-    init {
-        onEvent(SplashEvent.StartTimer)
-    }
-
-    override fun onEvent(event: SplashEvent) {
-        when (event) {
-            is SplashEvent.StartTimer -> {
-                viewModelScope.launch {
-                    delay(2000.milliseconds)
-                    emitSideEffect(SplashSideEffect.NavigateToHome)
-                }
-            }
+    fun startTimer(navigator: AppNavigator) {
+        viewModelScope.launch {
+            delay(2000.milliseconds)
+            navigator.replaceRoot(HomeRoute.Home)
         }
     }
 }

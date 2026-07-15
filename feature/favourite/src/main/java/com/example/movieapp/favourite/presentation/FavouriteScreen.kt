@@ -54,34 +54,30 @@ import com.example.movieapp.designsystem.design.MovieAppSpacing
 import com.example.movieapp.designsystem.theme.DarkColorScheme
 import com.example.movieapp.domain.model.movie.PopularMovie
 import com.example.movieapp.favourite.R
+import com.example.movieapp.navigation.app_navigator.LocalNavigator
+import com.example.movieapp.navigation.home.HomeRoute
+import com.example.movieapp.navigation.moviedetail.MovieDetailRoute
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun FavouriteScreen(
-    onNavigateToHome: () -> Unit,
-    onNavigateToDetails: (Int, String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FavouriteViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(viewModel.sideEffect) {
-        viewModel.sideEffect.collect { effect ->
-            when (effect) {
-                is FavouriteSideEffect.NavigateToDetail -> {
-                    onNavigateToDetails(effect.movieId, effect.category)
-                }
-
-                is FavouriteSideEffect.NavigateToHome -> onNavigateToHome()
-            }
-        }
-    }
+    val navigator = LocalNavigator.current
 
     FavouriteScreenContent(
         state = state,
         onEvent = viewModel::onEvent,
+        onNavigateToDetail = { id, category ->
+            navigator.navigateTo(MovieDetailRoute.MovieDetail(id, category))
+        },
+        onNavigateToHome = {
+            navigator.replaceRoot(HomeRoute.Home)
+        },
         modifier = modifier
     )
 }
@@ -90,8 +86,10 @@ fun FavouriteScreen(
 @Composable
 private fun FavouriteScreenContent(
     state: FavouriteState,
-    modifier: Modifier = Modifier,
     onEvent: (FavouriteEvent) -> Unit,
+    onNavigateToDetail: (Int, String) -> Unit,
+    onNavigateToHome: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val lazyListState = rememberLazyListState()
     var isHeaderVisible by remember { mutableStateOf(true) }
@@ -133,9 +131,7 @@ private fun FavouriteScreenContent(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Image(
-                                    painter = painterResource(
-                                        R.drawable.no_result_icon
-                                    ),
+                                    painter = painterResource(R.drawable.no_result_icon),
                                     contentDescription = null,
                                     modifier = Modifier.size(MovieAppSizing.size106)
                                 )
@@ -176,12 +172,7 @@ private fun FavouriteScreenContent(
                                         FavoriteMovieItem(
                                             movie = movie,
                                             onMovieClick = {
-                                                onEvent(
-                                                    FavouriteEvent.OnMovieClick(
-                                                        movie.id,
-                                                        movie.category
-                                                    )
-                                                )
+                                                onNavigateToDetail(movie.id, movie.category)
                                             },
                                             onRemoveFavorite = {
                                                 onEvent(FavouriteEvent.OnRemoveFavorite(movie))
@@ -223,7 +214,7 @@ private fun FavouriteScreenContent(
             currentTab = MovieTab.FAVORITES,
             onTabSelected = { selectedTab ->
                 if (selectedTab == MovieTab.HOME) {
-                    onEvent(FavouriteEvent.OnHomeClick)
+                    onNavigateToHome()
                 }
             },
             modifier = Modifier

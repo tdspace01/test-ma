@@ -54,6 +54,7 @@ import com.example.movieapp.designsystem.design.MovieAppSizing
 import com.example.movieapp.designsystem.design.MovieAppSpacing
 import com.example.movieapp.designsystem.theme.DarkColorScheme
 import com.example.movieapp.moviedetail.R
+import com.example.movieapp.navigation.app_navigator.LocalNavigator
 import com.example.movieapp.navigation.moviedetail.MovieDetailRoute
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -61,24 +62,17 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun MovieDetailScreen(
     route: MovieDetailRoute.MovieDetail,
-    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MovieDetailViewModel = koinViewModel { parametersOf(route) }
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(viewModel.sideEffect) {
-        viewModel.sideEffect.collect { effect ->
-            when (effect) {
-                is MovieDetailSideEffect.NavigateBack -> onNavigateBack()
-            }
-        }
-    }
+    val navigator = LocalNavigator.current
 
     MovieDetailContent(
         state = state,
         category = route.category,
         onEvent = viewModel::onEvent,
+        onBackClick = { navigator.navigateBack() },
         modifier = modifier
     )
 }
@@ -89,6 +83,7 @@ private fun MovieDetailContent(
     state: MovieDetailState,
     category: String,
     onEvent: (MovieDetailEvent) -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -165,7 +160,7 @@ private fun MovieDetailContent(
                                 .clip(MovieAppShapes.corner16)
                                 .background(DarkColorScheme.primaryYellow)
                                 .clickable {
-                                    // movie trl
+                                    // movie trailer click logic
                                 }
                                 .padding(
                                     horizontal = MovieAppSizing.size24,
@@ -296,7 +291,7 @@ private fun MovieDetailContent(
                         .width(MovieAppSizing.size10)
                         .height(MovieAppSizing.size18)
                         .align(Alignment.CenterStart)
-                        .clickable { onEvent(MovieDetailEvent.OnBackClick) }
+                        .clickable { onBackClick() } // Triggers navigator directly
                 )
                 MovieAppText(
                     text = stringResource(R.string.details),

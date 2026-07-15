@@ -1,16 +1,16 @@
 package com.example.movieapp.favourite.presentation
 
-import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
-import com.example.movieapp.ui.base.BaseViewModel
 import com.example.movieapp.domain.model.movie.PopularMovie
-import com.example.movieapp.domain.usecase.movie.ToggleFavouriteUseCase
 import com.example.movieapp.domain.usecase.movie.GetFavouriteMoviesUseCase
+import com.example.movieapp.domain.usecase.movie.ToggleFavouriteUseCase
+import com.example.movieapp.ui.base.BaseViewModel
+import kotlinx.coroutines.launch
 
 class FavouriteViewModel(
     private val getFavoriteMoviesUseCase: GetFavouriteMoviesUseCase,
     private val toggleFavoriteUseCase: ToggleFavouriteUseCase
-) : BaseViewModel<FavouriteState, FavouriteEvent, FavouriteSideEffect>(FavouriteState()) {
+) : BaseViewModel<FavouriteState, FavouriteEvent, Unit>(FavouriteState()) {
 
     init {
         onEvent(FavouriteEvent.ObserveFavorites)
@@ -20,12 +20,6 @@ class FavouriteViewModel(
         when (event) {
             is FavouriteEvent.ObserveFavorites -> observeFavorites()
             is FavouriteEvent.OnRemoveFavorite -> handleRemoveFavorite(event.movie)
-            is FavouriteEvent.OnMovieClick -> {
-                emitSideEffect(FavouriteSideEffect.NavigateToDetail(event.movieId, event.category))
-            }
-
-            is FavouriteEvent.OnHomeClick -> emitSideEffect(FavouriteSideEffect.NavigateToHome)
-
         }
     }
 

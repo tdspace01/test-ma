@@ -22,7 +22,7 @@ class MovieDetailViewModel(
     private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
     private val toggleFavoriteUseCase: ToggleFavouriteUseCase,
     private val observeNetworkStatusUseCase: ObserveNetworkStatusUseCase,
-) : BaseViewModel<MovieDetailState, MovieDetailEvent, MovieDetailSideEffect>(MovieDetailState()) {
+) : BaseViewModel<MovieDetailState, MovieDetailEvent, Unit>(MovieDetailState()) {
 
     private val reloadTrigger = MutableStateFlow(0)
 
@@ -33,9 +33,6 @@ class MovieDetailViewModel(
 
     override fun onEvent(event: MovieDetailEvent) {
         when (event) {
-            MovieDetailEvent.OnBackClick ->
-                emitSideEffect(MovieDetailSideEffect.NavigateBack)
-
             MovieDetailEvent.OnToggleFavorite -> {
                 if (currentState.errorType == NetworkError.NO_INTERNET) return
                 val movie = currentState.movieDetail ?: return

@@ -39,13 +39,13 @@ class HomeViewModel(
     private val toggleFavoriteUseCase: ToggleFavouriteUseCase,
     private val observeNetworkStatusUseCase: ObserveNetworkStatusUseCase,
     getFavouriteIdsUseCase: GetFavouriteIdsUseCase,
-) : BaseViewModel<HomeState, HomeEvent, HomeSideEffect>(HomeState()) {
+) : BaseViewModel<HomeState, HomeEvent, Unit>(HomeState()) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val pagedMovies: Flow<PagingData<PopularMovie>> = state
         .map { it.listMode to it.refreshKey }
         .distinctUntilChanged()
-        .mapNotNull { (mode,_) -> mode }
+        .mapNotNull { (mode, _) -> mode }
         .flatMapLatest { mode ->
             when (mode) {
                 is MovieListMode.Popular -> getPopularMoviesPagedUseCase()
@@ -66,30 +66,35 @@ class HomeViewModel(
         when (event) {
             is HomeEvent.OnSearchQueryChanged -> updateState {
                 if (event.query.isNotBlank()) {
-                    copy(searchQuery = event.query, isGenresExpanded = false,
+                    copy(
+                        searchQuery = event.query,
+                        isGenresExpanded = false,
                         selectedGenreId = null,
                     )
-                } else { copy(searchQuery = event.query) }
+                } else {
+                    copy(searchQuery = event.query)
+                }
             }
-            HomeEvent.OnClearSearch ->updateState { copy(searchQuery = "", activeSearchQuery = "") }
-            HomeEvent.OnToggleGenresVisibility ->
-                updateState { copy(isGenresExpanded = !isGenresExpanded) }
-            is HomeEvent.OnGenreSelected ->
+            HomeEvent.OnClearSearch -> updateState { copy(searchQuery = "", activeSearchQuery = "") }
+            HomeEvent.OnToggleGenresVisibility -> updateState { copy(isGenresExpanded = !isGenresExpanded) }
+            is HomeEvent.OnGenreSelected -> {
                 if (!currentState.isOffline) {
                     updateState {
-                        copy(selectedGenreId = if (selectedGenreId == event.genreId) null
-                        else event.genreId
+                        copy(
+                            selectedGenreId = if (selectedGenreId == event.genreId) null
+                            else event.genreId
                         )
                     }
                 }
-            HomeEvent.OnGenreCleared -> if (!currentState.isOffline) {
-                updateState { copy(selectedGenreId = null) }
             }
-            is HomeEvent.OnToggleFavorite ->
+            HomeEvent.OnGenreCleared -> {
+                if (!currentState.isOffline) {
+                    updateState { copy(selectedGenreId = null) }
+                }
+            }
+            is HomeEvent.OnToggleFavorite -> {
                 viewModelScope.launch { toggleFavoriteUseCase(event.movie) }
-            is HomeEvent.OnMovieClick ->
-                emitSideEffect(HomeSideEffect.NavigateToDetail(event.movieId, event.category))
-            HomeEvent.OnFavoriteClick -> emitSideEffect(HomeSideEffect.NavigateToFavorite)
+            }
             HomeEvent.OnRefresh -> refresh()
         }
     }
@@ -114,7 +119,7 @@ class HomeViewModel(
                 .distinctUntilChanged()
                 .collect { status ->
                     when (status) {
-                        NetworkStatus.Available -> {updateState { copy(isOffline = false) } }
+                        NetworkStatus.Available -> { updateState { copy(isOffline = false) } }
                         NetworkStatus.Unavailable -> {
                             updateState { copy(isOffline = true, requiresManualRefresh = true) }
                         }
@@ -143,13 +148,14 @@ class HomeViewModel(
             delay(2.seconds)
             if (!observeNetworkStatusUseCase.isConnected()) {
                 updateState {
-                    copy(isRefreshing = false, isOffline = true,requiresManualRefresh = true)
-                };return@launch
+                    copy(isRefreshing = false, isOffline = true, requiresManualRefresh = true)
+                }
+                return@launch
             }
             updateState {
                 copy(
-                    isRefreshing = false,isOffline = false,
-                    errorType = null,requiresManualRefresh = false,refreshKey = refreshKey + 1,
+                    isRefreshing = false, isOffline = false,
+                    errorType = null, requiresManualRefresh = false, refreshKey = refreshKey + 1,
                 )
             }
             if (currentState.genres.isEmpty()) loadGenres()

@@ -62,30 +62,20 @@ import com.example.movieapp.designsystem.theme.DarkColorScheme
 import com.example.movieapp.domain.model.movie.PopularMovie
 import com.example.movieapp.domain.model.search.Genre
 import com.example.movieapp.home.R
+import com.example.movieapp.navigation.app_navigator.LocalNavigator
+import com.example.movieapp.navigation.favourite.FavouriteRoute
+import com.example.movieapp.navigation.moviedetail.MovieDetailRoute
 import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreen(
-    onNavigateToDetail: (Int, String) -> Unit,
-    onNavigateToFavorite: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var hasLoadedMoviesOnce by remember { mutableStateOf(false) }
-
-    LaunchedEffect(viewModel.sideEffect) {
-        viewModel.sideEffect.collect { effect ->
-            when (effect) {
-                is HomeSideEffect.NavigateToDetail ->
-                    onNavigateToDetail(effect.movieId, effect.category)
-
-                is HomeSideEffect.NavigateToFavorite ->
-                    onNavigateToFavorite()
-            }
-        }
-    }
+    val navigator = LocalNavigator.current
 
     HomeScreenContent(
         state = state,
@@ -93,6 +83,10 @@ fun HomeScreen(
         hasLoadedMoviesOnce = hasLoadedMoviesOnce,
         onMoviesLoaded = { hasLoadedMoviesOnce = true },
         onEvent = viewModel::onEvent,
+        onNavigateToDetail = { id, category ->
+            navigator.navigateTo(MovieDetailRoute.MovieDetail(id, category))
+        },
+        onNavigateToFavorite = { navigator.replaceRoot(FavouriteRoute.Favourite) },
         modifier = modifier
     )
 }
@@ -104,6 +98,8 @@ private fun HomeScreenContent(
     hasLoadedMoviesOnce: Boolean,
     onMoviesLoaded: () -> Unit,
     onEvent: (HomeEvent) -> Unit,
+    onNavigateToDetail: (Int, String) -> Unit,
+    onNavigateToFavorite: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val showFullError = !state.isRefreshing && (
@@ -164,6 +160,7 @@ private fun HomeScreenContent(
                             onInitialLoadingChanged = { isInitialLoading = it },
                             onGridAtTopChanged = { isGridAtTop = it },
                             onEvent = onEvent,
+                            onMovieClick = onNavigateToDetail
                         )
                     }
                 }
@@ -234,7 +231,7 @@ private fun HomeScreenContent(
             MovieAppNavigationButton(
                 currentTab = MovieTab.HOME,
                 onTabSelected = { selectedTab ->
-                    if (selectedTab == MovieTab.FAVORITES) onEvent(HomeEvent.OnFavoriteClick)
+                    if (selectedTab == MovieTab.FAVORITES) onNavigateToFavorite()
                 },
             )
         }
@@ -274,6 +271,7 @@ private fun HomeMoviesGrid(
     onInitialLoadingChanged: (Boolean) -> Unit,
     onGridAtTopChanged: (Boolean) -> Unit,
     onEvent: (HomeEvent) -> Unit,
+    onMovieClick: (Int, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val lazyPagingItems = pagedMovies.collectAsLazyPagingItems()
@@ -362,14 +360,7 @@ private fun HomeMoviesGrid(
                         MovieItem(
                             popularMovie = movie,
                             modifier = Modifier.fillMaxWidth(),
-                            onMovieClick = {
-                                onEvent(
-                                    HomeEvent.OnMovieClick(
-                                        movie.id,
-                                        movie.category
-                                    )
-                                )
-                            },
+                            onMovieClick = { id -> onMovieClick(id, movie.category) },
                             onFavoriteClick = {
                                 onEvent(HomeEvent.OnToggleFavorite(movie))
                             }

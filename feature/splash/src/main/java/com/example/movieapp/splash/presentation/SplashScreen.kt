@@ -11,21 +11,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.example.movieapp.designsystem.design.MovieAppSizing
-import kotlinx.coroutines.flow.collectLatest
+import com.example.movieapp.navigation.app_navigator.LocalNavigator
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SplashScreen(
-    onNavigateToHome: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SplashViewModel = koinViewModel()
 ) {
-    LaunchedEffect(viewModel.sideEffect) {
-        viewModel.sideEffect.collectLatest { effect ->
-            when (effect) {
-                is SplashSideEffect.NavigateToHome -> onNavigateToHome()
-            }
-        }
+    val navigator = LocalNavigator.current
+
+    LaunchedEffect(Unit) {
+        viewModel.startTimer(navigator)
     }
 
     Box(
