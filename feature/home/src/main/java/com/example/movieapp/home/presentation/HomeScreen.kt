@@ -86,7 +86,9 @@ fun HomeScreen(
         onNavigateToDetail = { id, category ->
             navigator.navigateTo(MovieDetailRoute.MovieDetail(id, category))
         },
-        onNavigateToFavorite = { navigator.replaceRoot(FavouriteRoute.Favourite) },
+        onNavigateToFavorite = {
+            navigator.navigateTo(FavouriteRoute.Favourite)
+        },
         modifier = modifier
     )
 }

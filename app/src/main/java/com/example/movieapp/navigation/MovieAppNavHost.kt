@@ -30,17 +30,32 @@ fun MovieAppNavHost(modifier: Modifier = Modifier) {
 
     val navigator = remember(backStack) {
         object : AppNavigator {
+            private var lastNavTime = 0L
+            private val navDebounceMs = 400L
             override fun navigateTo(route: NavKey) {
-                if (backStack.lastOrNull() != route) {
-                    backStack.add(route)
+                val currentTime = System.currentTimeMillis()
+
+                if (currentTime - lastNavTime >= navDebounceMs) {
+                    if (backStack.lastOrNull() != route) {
+                        lastNavTime = currentTime
+                        backStack.add(route)
+                    }
                 }
             }
+
             override fun navigateBack() {
-                if (backStack.size > 1) {
-                    backStack.removeLastOrNull()
+                val currentTime = System.currentTimeMillis()
+
+                if (currentTime - lastNavTime >= navDebounceMs) {
+                    if (backStack.size > 1) {
+                        lastNavTime = currentTime
+                        backStack.removeLastOrNull()
+                    }
                 }
             }
+
             override fun replaceRoot(route: NavKey) {
+                lastNavTime = System.currentTimeMillis()
                 backStack.clear()
                 backStack.add(route)
             }
