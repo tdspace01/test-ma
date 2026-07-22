@@ -13,16 +13,13 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.example.movieapp.favourite.presentation.FavouriteScreen
-import com.example.movieapp.home.presentation.HomeScreen
-import com.example.movieapp.moviedetail.presentation.MovieDetailScreen
+import com.example.movieapp.favourite.navigation.favouriteEntry
+import com.example.movieapp.home.navigation.homeEntry
+import com.example.movieapp.moviedetail.navigation.movieDetailEntry
 import com.example.movieapp.navigation.app_navigator.DefaultAppNavigator
 import com.example.movieapp.navigation.app_navigator.LocalNavigator
-import com.example.movieapp.navigation.favourite.FavouriteRoute
-import com.example.movieapp.navigation.home.HomeRoute
-import com.example.movieapp.navigation.moviedetail.MovieDetailRoute
 import com.example.movieapp.navigation.splash.SplashRoute
-import com.example.movieapp.splash.presentation.SplashScreen
+import com.example.movieapp.splash.navigation.splashEntry
 
 @Composable
 fun MovieAppNavHost(modifier: Modifier = Modifier) {
@@ -48,10 +45,10 @@ fun MovieAppNavHost(modifier: Modifier = Modifier) {
                 slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
             },
             entryProvider = entryProvider {
-                entry<SplashRoute> { SplashScreen() }
-                entry<HomeRoute.Home> { HomeScreen() }
-                entry<FavouriteRoute.Favourite> { FavouriteScreen() }
-                entry<MovieDetailRoute.MovieDetail> { key -> MovieDetailScreen(route = key) }
+                homeEntry()
+                splashEntry()
+                favouriteEntry()
+                movieDetailEntry()
             }
         )
     }
