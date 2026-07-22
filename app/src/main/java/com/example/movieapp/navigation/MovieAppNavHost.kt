@@ -16,7 +16,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.example.movieapp.favourite.presentation.FavouriteScreen
 import com.example.movieapp.home.presentation.HomeScreen
 import com.example.movieapp.moviedetail.presentation.MovieDetailScreen
-import com.example.movieapp.navigation.app_navigator.AppNavigator
+import com.example.movieapp.navigation.app_navigator.DefaultAppNavigator
 import com.example.movieapp.navigation.app_navigator.LocalNavigator
 import com.example.movieapp.navigation.favourite.FavouriteRoute
 import com.example.movieapp.navigation.home.HomeRoute
@@ -27,40 +27,7 @@ import com.example.movieapp.splash.presentation.SplashScreen
 @Composable
 fun MovieAppNavHost(modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(SplashRoute as NavKey)
-
-    val navigator = remember(backStack) {
-        object : AppNavigator {
-            private var lastNavTime = 0L
-            private val navDebounceMs = 400L
-            override fun navigateTo(route: NavKey) {
-                val currentTime = System.currentTimeMillis()
-
-                if (currentTime - lastNavTime >= navDebounceMs) {
-                    if (backStack.lastOrNull() != route) {
-                        lastNavTime = currentTime
-                        backStack.add(route)
-                    }
-                }
-            }
-
-            override fun navigateBack() {
-                val currentTime = System.currentTimeMillis()
-
-                if (currentTime - lastNavTime >= navDebounceMs) {
-                    if (backStack.size > 1) {
-                        lastNavTime = currentTime
-                        backStack.removeLastOrNull()
-                    }
-                }
-            }
-
-            override fun replaceRoot(route: NavKey) {
-                lastNavTime = System.currentTimeMillis()
-                backStack.clear()
-                backStack.add(route)
-            }
-        }
-    }
+    val navigator = remember(backStack) { DefaultAppNavigator(backStack) }
 
     CompositionLocalProvider(LocalNavigator provides navigator) {
         NavDisplay(

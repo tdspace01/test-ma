@@ -5,8 +5,8 @@ import androidx.navigation3.runtime.NavKey
 
 interface AppNavigator {
     fun navigateTo(route: NavKey)
+    fun clearAndNavigate(route: NavKey)
     fun navigateBack()
-    fun replaceRoot(route: NavKey)
 }
 
 val LocalNavigator = staticCompositionLocalOf<AppNavigator> {

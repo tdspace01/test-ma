@@ -76,7 +76,7 @@ fun FavouriteScreen(
             navigator.navigateTo(MovieDetailRoute.MovieDetail(id, category))
         },
         onNavigateToHome = {
-            navigator.replaceRoot(HomeRoute.Home)
+            navigator.clearAndNavigate(HomeRoute.Home)
         },
         modifier = modifier
     )
